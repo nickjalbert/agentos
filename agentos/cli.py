@@ -9,6 +9,8 @@ import gym
 import mlflow.projects
 import importlib.util
 from pathlib import Path
+import yaml
+import requests
 
 
 CONDA_ENV_FILE = Path("./conda_env.yaml")
@@ -39,42 +41,27 @@ entry_points:
 AGENT_DEF_FILE = Path("./agent.py")  # Default location of agent code.
 AGENT_MAIN_FILE = Path("./main.py")
 AGENT_MAIN = """{file_header}
-import agentos
-import random
-import gym
-
-# TODO: REPLACE THE EXAMPLE CODE BELOW WITH YOUR OWN!
-
-# A minimal 1D hallway env class.
-class MyEnv(gym.Env):
-    def __init__(self):
-        super().__init__()
-        self.l_r_pos = 0  # left is neg, right is pos.
-
-    def reset(self):
-        self.l_r_pos = 0
-        return 0
-
-    def step(self, action):
-        self.l_r_pos += action
-        return self.l_r_pos, abs(self.l_r_pos), False, dict()
-
+from agentos import Agent
+from agentos import acs
+from agentos import run_agent
 
 # A minimal example agent class.
-class MyAgent(agentos.Agent):
-    def __init__(self, env_class):
-        super().__init__(env_class)
+class MyAgent(Agent):
+    def __init__(self):
         self.step_count = 0
 
     def advance(self):
+        if self.step_count == 0:
+            observation = self.environment.reset()
         print("Taking step " + str(self.step_count))
-        pos_in_env, _, _, _ = self.env.step(random.choice([-1,1]))
-        print("Position in env is now: " + str(pos_in_env))
+        possible_actions = self.environment.action_space
+        action = self.policy.decide(observation, possible_actions)
+        observation, _, _, _ = self.environment.step(action)
+        print("Position in env is now: " + str(observation))
         self.step_count += 1
 
-
 if __name__ == "__main__":
-    agentos.run_agent(MyAgent, MyEnv, max_iters=5)
+    run_agent(MyAgent, MyEnv, max_iters=5)
 """
 INIT_FILES = {
     CONDA_ENV_FILE: CONDA_ENV_CONTENT,
@@ -93,6 +80,25 @@ def validate_agent_name(ctx, param, value):
     if " " in value or ":" in value or "/" in value:
         raise click.BadParameter("name may not contain ' ', ':', or '/'.")
     return value
+
+
+@agentos_cmd.command()
+@click.argument("component_name")
+def install(component_name):
+    """Installs the specified component into this agent."""
+    REGISTRY_URL = (
+        "https://raw.githubusercontent.com/nickjalbert/agentos"
+        "/nj_registry/registry.yaml"
+    )
+    # TODO - local caching of registry
+    # TODO - check if we're in an agent directory
+    registry = yaml.safe_load(requests.get(REGISTRY_URL).text)
+    if component_name not in registry:
+        raise click.BadParameter(
+            f'"{component_name}" not found in the component registry'
+        )
+    print(f'Installing and registering component "{component_name}"')
+    agentos.acs.install_and_register_component(registry[component_name])
 
 
 @agentos_cmd.command()
