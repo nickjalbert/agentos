@@ -1,0 +1,20 @@
+corridor:
+  type: environment
+  description: "A 1D corridor for agents to walk down"
+  releases:
+    - name: 1.0.0
+      hash: 0b6720629917d2bf3bab82692fd92ebe414cc1cb
+      github_url: https://github.com/nickjalbert/corridor
+      class_name: corridor.Corridor
+      requirements_path: requirements.txt
+
+random_policy:
+  type: policy
+  description: "A policy that randomly chooses and available action"
+  releases:
+    - name: 1.0.0
+      hash: 1c1fadee68fd20ba37f6fdb2f5a9550c2d54617c
+      github_url: https://github.com/nickjalbert/random_policy
+      class_name: policy.RandomPolicy
+      requirements_path: null
+
