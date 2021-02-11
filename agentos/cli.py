@@ -45,6 +45,7 @@ AGENT_MAIN_FILE = Path("./main.py")
 AGENT_CODE = """{file_header}
 import agentos
 
+
 # A basic agent.
 class {agent_name}(agentos.Agent):
     def train(self):
@@ -59,6 +60,7 @@ class {agent_name}(agentos.Agent):
 ENV_DEF_FILE = Path("./environment.py")
 ENV_CODE = """{file_header}
 import agentos
+
 
 # Simulates a 1D corridor
 class Corridor(agentos.Environment):
@@ -88,16 +90,19 @@ class Corridor(agentos.Environment):
 POLICY_DEF_FILE = Path("./policy.py")
 POLICY_CODE = """{file_header}
 import agentos
+import random
+
 
 # A random policy
 class RandomPolicy(agentos.Policy):
-    def decide(self, observation):
-        return random.choice(action_space)
+    def decide(self, observation, actions):
+        return random.choice(actions)
 """
 
 TRAINER_DEF_FILE = Path("./trainer.py")
 TRAINER_CODE = """{file_header}
 import agentos
+
 
 # A no-op trainer
 class NoOpTrainer(agentos.Trainer):
