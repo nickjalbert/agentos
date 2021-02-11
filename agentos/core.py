@@ -6,7 +6,6 @@ from threading import Thread
 # TODO: update docs
 
 
-
 class Agent:
     """An Agent observes and takes actions in its environment till done.
 
@@ -49,7 +48,6 @@ class Agent:
         """Does one iteration of training"""
         raise NotImplementedError
 
-
     def advance(self):
         """Returns True when agent is done; False or None otherwise."""
         raise NotImplementedError
@@ -72,9 +70,11 @@ class Policy:
         """
         raise NotImplementedError
 
+
 class Trainer:
     def train(self, policy, **kwargs):
         raise NotImplementedError
+
 
 # Inspired by OpenAI's gym.Env
 # https://github.com/openai/gym/blob/master/gym/core.py
@@ -98,7 +98,6 @@ class Environment:
 
     def seed(self, seed):
         raise NotImplementedError
-
 
 
 def run_agent(

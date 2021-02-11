@@ -45,7 +45,7 @@ AGENT_MAIN_FILE = Path("./main.py")
 AGENT_CODE = """{file_header}
 import agentos
 
-# A basic agent. 
+# A basic agent.
 class {agent_name}(agentos.Agent):
     def train(self):
         self.trainer.train(self.policy)
@@ -87,7 +87,7 @@ class Corridor(agentos.Environment):
 """
 
 POLICY_DEF_FILE = Path("./policy.py")
-POLICY_CODE = """
+POLICY_CODE = """{file_header}
 import agentos
 
 # A random policy
@@ -95,10 +95,10 @@ class RandomPolicy(agentos.Policy):
     def decide(self, observation):
         return random.choice(action_space)
 
-""" 
+"""
 
 TRAINER_DEF_FILE = Path("./trainer.py")
-TRAINER_CODE = """
+TRAINER_CODE = """{file_header}
 import agentos
 
 # A no-op trainer
@@ -106,7 +106,7 @@ class NoOpTrainer(agentos.Trainer):
     def train(self, policy):
         return policy
 """
- 
+
 AGENT_INI_FILE = Path("./agent.ini")
 AGENT_INI_CONTENT = """
 [Agent]
@@ -191,7 +191,9 @@ def init(dir_names, agent_name):
             f.flush()
 
         d = "current working directory" if d == Path(".") else d
-        click.echo(f"Finished initializing AgentOS agent '{agent_name}' in {d}.")
+        click.echo(
+            f"Finished initializing AgentOS agent '{agent_name}' in {d}."
+        )
 
 
 def _get_subclass_from_file(filename, parent_class):
@@ -208,34 +210,30 @@ def _get_subclass_from_file(filename, parent_class):
             print(f"Found first subclass class {elt}; returning it.")
             return elt
 
+
 def get_class_from_config(class_path):
-    split_path = class_path.split('.')
+    split_path = class_path.split(".")
     class_name = split_path[-1]
-    module_name = '.'.join(split_path[:-1])
+    module_name = ".".join(split_path[:-1])
     module = importlib.import_module(module_name)
     return getattr(module, class_name)
 
 
-
 def load_agent_from_current_directory():
-    sys.path.append('.')
+    sys.path.append(".")
     agent_file = Path("./agent.ini")
     config = configparser.ConfigParser()
     config.read(agent_file)
-    agent_cls = get_class_from_config(config['Agent']['class'])
-    policy_cls = get_class_from_config(config['Policy']['class'])
-    environment_cls = get_class_from_config(config['Environment']['class'])
-    trainer_cls = get_class_from_config(config['Trainer']['class'])
+    agent_cls = get_class_from_config(config["Agent"]["class"])
+    policy_cls = get_class_from_config(config["Policy"]["class"])
+    environment_cls = get_class_from_config(config["Environment"]["class"])
+    trainer_cls = get_class_from_config(config["Trainer"]["class"])
     # TODO - intialize classes with configs
     return agent_cls(environment_cls(), policy_cls(), trainer_cls())
 
 
-
-
-
-
 @agentos_cmd.command()
-@click.argument('iters', type=click.INT, required=True)
+@click.argument("iters", type=click.INT, required=True)
 def train(iters):
     agent = load_agent_from_current_directory()
     for i in range(iters):
