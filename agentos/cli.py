@@ -9,7 +9,9 @@ import gym
 import mlflow.projects
 import importlib.util
 from pathlib import Path
-
+import configparser
+import importlib
+import sys
 
 CONDA_ENV_FILE = Path("./conda_env.yaml")
 CONDA_ENV_CONTENT = """{file_header}
@@ -60,37 +62,28 @@ import agentos
 
 # Simulates a 1D corridor
 class Corridor(agentos.Environment):
-    metadata = {{"render.modes": ["human"]}}
 
-    # Check [env_config] for corridor length, default to 10
-    def __init__(self, env_config=None):
-        self.env_config = env_config if env_config else {{}}
-        self.length = int(self.env_config.get("length", 10))
-        self.action_space = gym.spaces.Discrete(2)
-        self.observation_space = gym.spaces.Discrete(self.length + 1)
+    def __init__(self):
+        self.length = 5
+        self.action_space = [0, 1]
+        self.observation_space = [0, 1, 2, 3, 4, 5]
         self.reset()
 
     def step(self, action):
-        assert action in [0, 1]
+        assert action in self.action_space
         if action == 0:
             self.position = max(self.position - 1, 0)
         else:
             self.position = min(self.position + 1, self.length)
         return (self.position, -1, self.done, {{}})
 
-    @property
-    def done(self):
-        return self.position >= self.length
-
     def reset(self):
         self.position = 0
         return self.position
 
-    def render(self, mode="human"):
-        pass
-
-    def close(self):
-        pass
+    @property
+    def done(self):
+        return self.position >= self.length
 """
 
 POLICY_DEF_FILE = Path("./policy.py")
@@ -111,7 +104,7 @@ import agentos
 # A no-op trainer
 class NoOpTrainer(agentos.Trainer):
     def train(self, policy):
-	return policy
+        return policy
 """
  
 AGENT_INI_FILE = Path("./agent.ini")
@@ -119,11 +112,11 @@ AGENT_INI_CONTENT = """
 [Agent]
 class = agent.{agent_name}
 
-[Policy]
-class = policy.RandomPolicy
-
 [Environment]
 class = environment.Corridor
+
+[Policy]
+class = policy.RandomPolicy
 
 [Trainer]
 class = trainer.NoOpTrainer
@@ -214,6 +207,32 @@ def _get_subclass_from_file(filename, parent_class):
         if type(elt) is type and issubclass(elt, parent_class):
             print(f"Found first subclass class {elt}; returning it.")
             return elt
+
+def get_class_from_config(class_path):
+    split_path = class_path.split('.')
+    class_name = split_path[-1]
+    module_name = '.'.join(split_path[:-1])
+    module = importlib.import_module(module_name)
+    return getattr(module, class_name)
+
+
+
+def load_agent_from_current_directory():
+    sys.path.append('.')
+    agent_file = Path("./agent.ini")
+    config = configparser.ConfigParser()
+    config.read(agent_file)
+    agent_cls = get_class_from_config(config['Agent']['class'])
+    policy_cls = get_class_from_config(config['Policy']['class'])
+    environment_cls = get_class_from_config(config['Environment']['class'])
+    trainer_cls = get_class_from_config(config['Trainer']['class'])
+    # TODO - intialize classes with configs
+    return agent_cls(environment_cls(), policy_cls(), trainer_cls())
+
+
+
+
+
 
 @agentos_cmd.command()
 @click.argument('iters', type=click.INT, required=True)
