@@ -52,7 +52,7 @@ class {agent_name}(agentos.Agent):
 
     def advance(self):
         next_action = self.policy.decide(self.obs)
-        self.obs, done, reward, info  = self.environment.step(next_action)
+        self.obs, done, reward, info = self.environment.step(next_action)
 """
 
 
@@ -62,7 +62,6 @@ import agentos
 
 # Simulates a 1D corridor
 class Corridor(agentos.Environment):
-
     def __init__(self):
         self.length = 5
         self.action_space = [0, 1]
@@ -94,7 +93,6 @@ import agentos
 class RandomPolicy(agentos.Policy):
     def decide(self, observation):
         return random.choice(action_space)
-
 """
 
 TRAINER_DEF_FILE = Path("./trainer.py")
