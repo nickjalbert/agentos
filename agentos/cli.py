@@ -14,7 +14,7 @@ from pathlib import Path
 CONDA_ENV_FILE = Path("./conda_env.yaml")
 CONDA_ENV_CONTENT = """{file_header}
 
-name: {name}
+name: {agent_name}
 
 dependencies:
     - pip
@@ -25,10 +25,11 @@ dependencies:
       # update the line below and replace the line above with it.
       #- -e path/to/agentos/git/repo
 """
+
 MLFLOW_PROJECT_FILE = Path("./MLProject")
 MLFLOW_PROJECT_CONTENT = """{file_header}
 
-name: {name}
+name: {agent_name}
 
 conda_env: {conda_env}
 
@@ -36,50 +37,106 @@ entry_points:
   main:
     command: "python main.py"
 """
+
 AGENT_DEF_FILE = Path("./agent.py")  # Default location of agent code.
 AGENT_MAIN_FILE = Path("./main.py")
-AGENT_MAIN = """{file_header}
+AGENT_CODE = """{file_header}
 import agentos
-import random
-import gym
 
-# TODO: REPLACE THE EXAMPLE CODE BELOW WITH YOUR OWN!
-
-# A minimal 1D hallway env class.
-class MyEnv(gym.Env):
-    def __init__(self):
-        super().__init__()
-        self.l_r_pos = 0  # left is neg, right is pos.
-
-    def reset(self):
-        self.l_r_pos = 0
-        return 0
-
-    def step(self, action):
-        self.l_r_pos += action
-        return self.l_r_pos, abs(self.l_r_pos), False, dict()
-
-
-# A minimal example agent class.
-class MyAgent(agentos.Agent):
-    def __init__(self, env_class):
-        super().__init__(env_class)
-        self.step_count = 0
+# A basic agent. 
+class {agent_name}(agentos.Agent):
+    def train(self):
+        self.trainer.train(self.policy)
 
     def advance(self):
-        print("Taking step " + str(self.step_count))
-        pos_in_env, _, _, _ = self.env.step(random.choice([-1,1]))
-        print("Position in env is now: " + str(pos_in_env))
-        self.step_count += 1
-
-
-if __name__ == "__main__":
-    agentos.run_agent(MyAgent, MyEnv, max_iters=5)
+        next_action = self.policy.decide(self.obs)
+        self.obs, done, reward, info  = self.environment.step(next_action)
 """
+
+
+ENV_DEF_FILE = Path("./environment.py")
+ENV_CODE = """{file_header}
+import agentos
+
+# Simulates a 1D corridor
+class Corridor(agentos.Environment):
+    metadata = {{"render.modes": ["human"]}}
+
+    # Check [env_config] for corridor length, default to 10
+    def __init__(self, env_config=None):
+        self.env_config = env_config if env_config else {{}}
+        self.length = int(self.env_config.get("length", 10))
+        self.action_space = gym.spaces.Discrete(2)
+        self.observation_space = gym.spaces.Discrete(self.length + 1)
+        self.reset()
+
+    def step(self, action):
+        assert action in [0, 1]
+        if action == 0:
+            self.position = max(self.position - 1, 0)
+        else:
+            self.position = min(self.position + 1, self.length)
+        return (self.position, -1, self.done, {{}})
+
+    @property
+    def done(self):
+        return self.position >= self.length
+
+    def reset(self):
+        self.position = 0
+        return self.position
+
+    def render(self, mode="human"):
+        pass
+
+    def close(self):
+        pass
+"""
+
+POLICY_DEF_FILE = Path("./policy.py")
+POLICY_CODE = """
+import agentos
+
+# A random policy
+class RandomPolicy(agentos.Policy):
+    def decide(self, observation):
+        return random.choice(action_space)
+
+""" 
+
+TRAINER_DEF_FILE = Path("./trainer.py")
+TRAINER_CODE = """
+import agentos
+
+# A no-op trainer
+class NoOpTrainer(agentos.Trainer):
+    def train(self, policy):
+	return policy
+"""
+ 
+AGENT_INI_FILE = Path("./agent.ini")
+AGENT_INI_CONTENT = """
+[Agent]
+class = agent.{agent_name}
+
+[Policy]
+class = policy.RandomPolicy
+
+[Environment]
+class = environment.Corridor
+
+[Trainer]
+class = trainer.NoOpTrainer
+"""
+
 INIT_FILES = {
     CONDA_ENV_FILE: CONDA_ENV_CONTENT,
     MLFLOW_PROJECT_FILE: MLFLOW_PROJECT_CONTENT,
-    AGENT_MAIN_FILE: AGENT_MAIN,
+    AGENT_DEF_FILE: AGENT_CODE,
+    ENV_DEF_FILE: ENV_CODE,
+    POLICY_DEF_FILE: POLICY_CODE,
+    TRAINER_DEF_FILE: TRAINER_CODE,
+    AGENT_INI_FILE: AGENT_INI_CONTENT,
 }
 
 
@@ -98,16 +155,16 @@ def validate_agent_name(ctx, param, value):
 @agentos_cmd.command()
 @click.argument("dir_names", nargs=-1, metavar="DIR_NAMES")
 @click.option(
-    "--name",
+    "--agent-name",
     "-n",
     metavar="AGENT_NAME",
-    default="new_agent",
+    default="BasicAgent",
     callback=validate_agent_name,
     help="This is used as the name of the MLflow Project and "
     "Conda env for all *Directory Agents* being created. "
     "AGENT_NAME may not contain ' ', ':', or '/'.",
 )
-def init(dir_names, name):
+def init(dir_names, agent_name):
     """Initialize current (or specified) directory as an AgentOS agent.
 
     \b
@@ -133,7 +190,7 @@ def init(dir_names, name):
             )
             f.write(
                 content.format(
-                    name=name,
+                    agent_name=agent_name,
                     conda_env=CONDA_ENV_FILE.name,
                     file_header=header,
                 )
@@ -141,7 +198,7 @@ def init(dir_names, name):
             f.flush()
 
         d = "current working directory" if d == Path(".") else d
-        click.echo(f"Finished initializing AgentOS agent '{name}' in {d}.")
+        click.echo(f"Finished initializing AgentOS agent '{agent_name}' in {d}.")
 
 
 def _get_subclass_from_file(filename, parent_class):
@@ -157,6 +214,13 @@ def _get_subclass_from_file(filename, parent_class):
         if type(elt) is type and issubclass(elt, parent_class):
             print(f"Found first subclass class {elt}; returning it.")
             return elt
+
+@agentos_cmd.command()
+@click.argument('iters', type=click.INT, required=True)
+def train(iters):
+    agent = load_agent_from_current_directory()
+    for i in range(iters):
+        agent.train()
 
 
 @agentos_cmd.command()

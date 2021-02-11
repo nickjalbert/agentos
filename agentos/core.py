@@ -3,6 +3,9 @@ from collections import namedtuple
 import time
 from threading import Thread
 
+# TODO: update docs
+
+
 
 class Agent:
     """An Agent observes and takes actions in its environment till done.
@@ -31,25 +34,21 @@ class Agent:
     learning, use of models, state updates, etc.
     """
 
-    def __init__(self, env_class):
+    def __init__(self, environment, policy, trainer):
         """
         Set ``self.env``, then call its ``reset()`` function
         and store the observation it returns as ``self.init_obs``.
 
         :param env_class: The class object of the Environment for this agent.
         """
-        self.env = env_class()
-        self.init_obs = self.env.reset()
-        self._init()
+        self.environment = environment
+        self.policy = policy
+        self.trainer = trainer
 
-    def _init(self):
-        """Override as an alternative to :py:func:`Agent.__init__()`
+    def train(self):
+        """Does one iteration of training"""
+        raise NotImplementedError
 
-        This is a convenience function for when you just want to
-        add some functionality to the constructor but don't want
-        to completely override the constructor.
-        """
-        pass
 
     def advance(self):
         """Returns True when agent is done; False or None otherwise."""
@@ -63,7 +62,7 @@ class Policy:
     to decide on a next action given the last observation from an env.
     """
 
-    def compute_action(self, observation):
+    def decide(self, observation):
         """Takes an observation and returns next action to take.
 
         :param observation: should be in the `observation_space` of the
@@ -72,6 +71,34 @@ class Policy:
             environments that this policy is compatible with.
         """
         raise NotImplementedError
+
+class Trainer:
+    def train(self, policy, **kwargs):
+        raise NotImplementedError
+
+# Inspired by OpenAI's gym.Env
+# https://github.com/openai/gym/blob/master/gym/core.py
+class Environment:
+    def __init__(self):
+        self.action_space = None
+        self.observation_space = None
+        self.reward_range = None
+
+    def step(self, action):
+        raise NotImplementedError
+
+    def reset(self):
+        raise NotImplementedError
+
+    def render(self, mode):
+        raise NotImplementedError
+
+    def close(self, mode):
+        pass
+
+    def seed(self, seed):
+        raise NotImplementedError
+
 
 
 def run_agent(
