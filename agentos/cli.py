@@ -48,12 +48,20 @@ import agentos
 
 # A basic agent.
 class {agent_name}(agentos.Agent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.obs = self.environment.reset()
+
     def train(self):
         self.trainer.train(self.policy)
 
     def advance(self):
-        next_action = self.policy.decide(self.obs)
-        self.obs, done, reward, info = self.environment.step(next_action)
+        next_action = self.policy.decide(
+            self.obs,
+            self.environment.valid_actions
+        )
+        self.obs, reward, done, info = self.environment.step(next_action)
+        return done
 """
 
 
@@ -81,6 +89,10 @@ class Corridor(agentos.Environment):
     def reset(self):
         self.position = 0
         return self.position
+
+    @property
+    def valid_actions(self):
+        return self.action_space
 
     @property
     def done(self):
@@ -241,6 +253,17 @@ def train(iters):
     agent = load_agent_from_current_directory()
     for i in range(iters):
         agent.train()
+
+
+@agentos_cmd.command()
+def test():
+    agent = load_agent_from_current_directory()
+    done = False
+    step_count = 0
+    while not done:
+        done = agent.advance()
+        step_count += 1
+    print(f"Agent finished in {step_count} steps")
 
 
 @agentos_cmd.command()
