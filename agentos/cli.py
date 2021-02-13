@@ -230,6 +230,7 @@ def _get_subclass_from_file(filename, parent_class):
 
 
 def get_class_from_config(class_path):
+    """Takes class_path of form "module.Class" and returns the class object."""
     split_path = class_path.split(".")
     class_name = split_path[-1]
     module_name = ".".join(split_path[:-1])
@@ -238,21 +239,34 @@ def get_class_from_config(class_path):
 
 
 def load_agent_from_current_directory():
+    """Returns agent specified by agent.ini in the current directory."""
     sys.path.append(".")
     agent_file = Path("./agent.ini")
     config = configparser.ConfigParser()
     config.read(agent_file)
-    agent_cls = get_class_from_config(config["Agent"]["class"])
-    policy_cls = get_class_from_config(config["Policy"]["class"])
-    environment_cls = get_class_from_config(config["Environment"]["class"])
-    trainer_cls = get_class_from_config(config["Trainer"]["class"])
-    # TODO - intialize classes with configs
-    return agent_cls(environment_cls(), policy_cls(), trainer_cls())
+
+    agent_dict = dict(config["Agent"])
+    agent_cls = get_class_from_config(agent_dict.pop("class"))
+    environment_dict = dict(config["Environment"])
+    environment_cls = get_class_from_config(environment_dict.pop("class"))
+    policy_dict = dict(config["Policy"])
+    policy_cls = get_class_from_config(policy_dict.pop("class"))
+    trainer_dict = dict(config["Trainer"])
+    trainer_cls = get_class_from_config(trainer_dict.pop("class"))
+
+    agent_kwargs = {
+        "environment": environment_cls(**environment_dict),
+        "policy": policy_cls(**policy_dict),
+        "trainer": trainer_cls(**trainer_dict),
+        **agent_dict,
+    }
+    return agent_cls(**agent_kwargs)
 
 
 @agentos_cmd.command()
 @click.argument("iters", type=click.INT, required=True)
 def train(iters):
+    """Trains an agent by calling its train() method in a loop."""
     agent = load_agent_from_current_directory()
     for i in range(iters):
         agent.train()
@@ -260,6 +274,7 @@ def train(iters):
 
 @agentos_cmd.command()
 def test():
+    """Test an agent by calling advance() on it until it returns True"""
     agent = load_agent_from_current_directory()
     done = False
     step_count = 0

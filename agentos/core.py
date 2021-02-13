@@ -4,7 +4,13 @@ import time
 from threading import Thread
 
 
-class Agent:
+class MemberInitializer:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+
+class Agent(MemberInitializer):
     """An Agent observes and takes actions in its environment till done.
 
     An agent holds an environment ``self.env``, which it can use
@@ -31,17 +37,6 @@ class Agent:
     learning, use of models, state updates, etc.
     """
 
-    def __init__(self, environment, policy, trainer):
-        """
-        Set ``self.env``, then call its ``reset()`` function
-        and store the observation it returns as ``self.init_obs``.
-
-        :param env_class: The class object of the Environment for this agent.
-        """
-        self.environment = environment
-        self.policy = policy
-        self.trainer = trainer
-
     def train(self):
         """Does one iteration of training"""
         raise NotImplementedError
@@ -51,7 +46,7 @@ class Agent:
         raise NotImplementedError
 
 
-class Policy:
+class Policy(MemberInitializer):
     """Pick next action based on last observation from environment.
 
     Policies are used by agents to encapsulate any state or logic necessary
@@ -69,7 +64,7 @@ class Policy:
         raise NotImplementedError
 
 
-class Trainer:
+class Trainer(MemberInitializer):
     """Mutates the agent's policy based on the agent's experience."""
 
     def train(self, policy, **kwargs):
@@ -89,10 +84,11 @@ class Trainer:
 
 # Inspired by OpenAI's gym.Env
 # https://github.com/openai/gym/blob/master/gym/core.py
-class Environment:
+class Environment(MemberInitializer):
     """Minimalist port of OpenAI's gym.Env."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.action_space = None
         self.observation_space = None
         self.reward_range = None
