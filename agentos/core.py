@@ -3,8 +3,6 @@ from collections import namedtuple
 import time
 from threading import Thread
 
-# TODO: update docs
-
 
 class Agent:
     """An Agent observes and takes actions in its environment till done.
@@ -72,22 +70,39 @@ class Policy:
 
 
 class Trainer:
+    """Mutates the agent's policy based on the agent's experience."""
+
     def train(self, policy, **kwargs):
+        """Trains the policy.
+
+        As the agent gains experience in the environment, Trainer.train updates
+        the policy to reflect this experience so that the agent can maximize
+        reward.
+
+        :param policy: this is the current policy.  Train will mutate this
+            in-place.
+
+        :returns: updated policy
+        """
         raise NotImplementedError
 
 
 # Inspired by OpenAI's gym.Env
 # https://github.com/openai/gym/blob/master/gym/core.py
 class Environment:
+    """Minimalist port of OpenAI's gym.Env."""
+
     def __init__(self):
         self.action_space = None
         self.observation_space = None
         self.reward_range = None
 
     def step(self, action):
+        """Perform the action in the environment."""
         raise NotImplementedError
 
     def reset(self):
+        """Resets the environment to an initial state."""
         raise NotImplementedError
 
     def render(self, mode):
