@@ -64,10 +64,6 @@ class {agent_name}(agentos.Agent):
         return done
 """
 
-# TODO - environment: valid_actions
-# TODO - environment: current_observation
-
-
 ENV_DEF_FILE = Path("./environment.py")
 ENV_CODE = """{file_header}
 import agentos
