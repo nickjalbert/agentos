@@ -5,6 +5,14 @@ from threading import Thread
 
 
 class MemberInitializer:
+    """Takes all constructor kwargs and sets them as class members.
+
+    For example, if MyClass is a MemberInitializer:
+
+    a = MyClass(foo='bar')
+    assert a.foo == 'bar'
+    """
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
