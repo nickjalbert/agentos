@@ -15,7 +15,13 @@ https://docs.google.com/presentation/d/1PTpau4MnPsuTHqvLvFzoVnjfp1rlxETwSehd1w_I
 
 See TODOs in r2d2 policy.py for more nitty gritty
 
+## Shortcomings
 
-Next step:
+* Environments using dm_env.  How will this play with Ray?  Adding dependencies
+  like this for all environments is not ideal.
+
+
+## Next step
+
 * Env data in AOS registry
 * Start putting together pres of lessons learned (e.g. AOS requirements are tricky)

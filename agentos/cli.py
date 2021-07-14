@@ -351,11 +351,14 @@ def load_agent_from_path(agent_file):
 
     agent_cls = get_class_from_config(agent_dir_path, config["Agent"])
     env_cls = get_class_from_config(agent_dir_path, config["Environment"])
+    environment = env_cls(**config["Environment"])
     policy_cls = get_class_from_config(agent_dir_path, config["Policy"])
+    environment_spec = environment.get_spec()
+    policy = policy_cls(environment_spec=environment_spec, **config["Policy"])
 
     agent_kwargs = {
-        "environment": env_cls(**config["Environment"]),
-        "policy": policy_cls(**config["Policy"]),
+        "environment": environment,
+        "policy": policy,
         **config["Agent"],
     }
     return agent_cls(**agent_kwargs)
