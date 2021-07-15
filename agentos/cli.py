@@ -8,6 +8,7 @@ import os
 import sys
 import yaml
 import click
+import pickle
 from datetime import datetime
 import importlib.util
 from pathlib import Path
@@ -210,6 +211,7 @@ def confirm_package_installation(registry_entry, location):
 
 def create_directory_structure(location):
     os.makedirs(location, exist_ok=True)
+    os.makedirs(location / 'data', exist_ok=True)
 
 
 def get_release_entry(registry_entry):
@@ -343,18 +345,40 @@ def get_class_from_config(agent_dir_path, config):
     return cls
 
 
-def load_agent_from_path(agent_file):
+# TODO - V hacky!  is this the a reasonable way to go?
+def restore_saved_data(package_location):
+    package_location = Path(package_location).absolute()
+    data_location = package_location / 'data'
+    # TODO - uglily communicates to save_data() the dynamic data location
+    agentos.__dict__['save_data'].__dict__['data_location'] = data_location
+    saved_data = {}
+    # TODO - handle aliasing
+    files = data_location.glob('*')
+    for f in files:
+        print(f'Restoring data at {f}')
+        with open(f, 'rb') as f_in:
+            data = pickle.load(f_in)
+        saved_data[f.name] = data
+    agentos.__dict__['saved_data'] = saved_data
+
+
+def load_agent_from_path(agent_file, package_location):
     agent_path = Path(agent_file)
     agent_dir_path = agent_path.parent.absolute()
     config = configparser.ConfigParser()
     config.read(agent_path)
 
+    restore_saved_data(package_location)
+
     agent_cls = get_class_from_config(agent_dir_path, config["Agent"])
     env_cls = get_class_from_config(agent_dir_path, config["Environment"])
     environment = env_cls(**config["Environment"])
-    policy_cls = get_class_from_config(agent_dir_path, config["Policy"])
     environment_spec = environment.get_spec()
-    policy = policy_cls(environment_spec=environment_spec, **config["Policy"])
+    policy_cls = get_class_from_config(agent_dir_path, config["Policy"])
+    policy = policy_cls(
+            environment_spec=environment_spec,
+            **config["Policy"]
+    )
 
     agent_kwargs = {
         "environment": environment,
@@ -373,9 +397,17 @@ def load_agent_from_path(agent_file):
     default="./agent.ini",
     help="Path to agent definition file (agent.ini).",
 )
-def learn(iters, agent_file):
+@click.option(
+    "--package-location",
+    "-l",
+    metavar="PACKAGE_LOCATION",
+    type=click.Path(),
+    default="./.acr",
+    help="Path to AgentOS Component Registry installation directory",
+)
+def learn(iters, agent_file, package_location):
     """Trains an agent by calling its learn() method in a loop."""
-    agent = load_agent_from_path(agent_file)
+    agent = load_agent_from_path(agent_file, package_location)
     for i in range(iters):
         agent.learn()
 
@@ -387,6 +419,14 @@ def learn(iters, agent_file):
     type=click.Path(exists=True),
     default="./agent.ini",
     help="Path to agent definition file (agent.ini).",
+)
+@click.option(
+    "--package-location",
+    "-l",
+    metavar="PACKAGE_LOCATION",
+    type=click.Path(),
+    default="./.acr",
+    help="Path to AgentOS Component Registry installation directory",
 )
 @click.option(
     "--hz",
@@ -404,9 +444,9 @@ def learn(iters, agent_file):
     default=None,
     help="Stop running agent after this many calls to advance().",
 )
-def run(agent_file, hz, max_iters):
+def run(agent_file, package_location, hz, max_iters):
     """Run an agent by calling advance() on it until it returns True"""
-    agent = load_agent_from_path(agent_file)
+    agent = load_agent_from_path(agent_file, package_location)
     agentos.run_agent(agent, hz=hz, max_iters=max_iters)
 
 

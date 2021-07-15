@@ -8,6 +8,8 @@ from agentos.core import (
     run_agent,
     rollout,
     rollouts,
+    save_data,
+    saved_data,
 )
 
 __all__ = [
@@ -17,4 +19,6 @@ __all__ = [
     "run_agent",
     "rollout",
     "rollouts",
+    "save_data",
+    "saved_data",
 ]
