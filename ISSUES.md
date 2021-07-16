@@ -42,14 +42,17 @@ See TODOs in r2d2 policy.py for more nitty gritty
 // * Env data in AOS registry
 // * Start putting together pres of lessons learned (e.g. AOS requirements are tricky)
 
-* Get persistence working
-    * Policy.observe is implemented, implement in default agent loop
-    * Test/train working in default agent
-    * Actually dump network in r2d2
-    * Maybe make a script to generate a fresh demo agent?
+// * Get persistence working
+//    * Policy.observe is implemented, implement in default agent loop
+//    * Test/train working in default agent
+//    * Actually dump network in r2d2
+//    * Maybe make a script to generate a fresh demo agent?
 
-* port other environments to use spec, policy API (need to atleast get default agent working)
+* Go through r2d2 demo script
+* Persistence looks like its working.  is it for real?
+* Port other envs (and default agent) so that they work
+* Clean up; slides
+
+
 * look at R2D2 in RLlib
-
-
 * port all example policies to use the spec instead of getting passed separate actions
