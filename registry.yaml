@@ -29,7 +29,7 @@ cartpole:
   description: "Balancing a pole on a cart"
   releases:
     - name: 1.0.0
-      hash: 51f1c1dd20ac129ea836299be5b1bceda71ef588
+      hash: 3b71df55736fa65d548ae023bbc5f570a9dc4bf6
       github_url: https://github.com/nickjalbert/cartpole
       file_path: cartpole.py
       class_name: CartPole
@@ -41,7 +41,7 @@ acme_r2d2:
   description: "R2D2 policy ported from Acme framework"
   releases:
     - name: 1.0.0
-      hash: 24f5ea25a855b6e9b34f85ac3d924a1e3963042d
+      hash: d76b4a96e2125d9cf2ca7e63b9c2359f6324a121
       github_url: https://github.com/nickjalbert/r2d2
       file_path: policy.py
       class_name: R2D2Policy

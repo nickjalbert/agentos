@@ -110,12 +110,34 @@ class Environment(MemberInitializer):
         raise NotImplementedError
 
 
+# https://github.com/deepmind/sonnet#tensorflow-checkpointing
 # TODO - custom saver/restorer functions
+# TODO - aliasing
 # TODO - V hacky way to pass in the global data location; we decorate
 #        this function with the location in restore_saved_data in cli.py
-def save_data(name, data):
-    with open(save_data.data_location / name, "wb") as f:
-        pickle.dump(data, f)
+# TODO - ONLY works for the demo (Acme on TF) because the dynamic module
+#        loading in ACR core breaks pickle. Need to figure out a more general
+#        way to handle this
+def save_data(name, network):
+    # with open(save_data.data_location / name, "wb") as f:
+    #     pickle.dump(data, f)
+    print('Saving module')
+    import tensorflow as tf
+    checkpoint = tf.train.Checkpoint(module=network)
+    checkpoint.save(save_data.data_location / name)
+
+
+# https://github.com/deepmind/sonnet#tensorflow-checkpointing
+# Same caveats as save_data above
+def restore_data(name, network):
+    import tensorflow as tf
+    checkpoint = tf.train.Checkpoint(module=network)
+    latest = tf.train.latest_checkpoint(restore_data.data_location)
+    if latest is not None:
+        print('AOS: Restoring policy network from checkpoint')
+        checkpoint.restore(latest)
+    else:
+        print('AOS: No checkpoint found for policy network')
 
 
 def run_agent(agent, hz=40, max_iters=None, as_thread=False):

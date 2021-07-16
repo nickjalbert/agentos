@@ -56,6 +56,18 @@ class {agent_name}(agentos.Agent):
 
     def learn(self):
         print("{agent_name} is calling self.policy.improve()")
+        action = None
+        self.obs = self.environment.reset()
+        reward = None
+        done = False
+        info = {}
+        self.policy.observe(action, self.obs, reward, done, info)
+        while not done:
+            action = self.policy.decide(
+                self.obs, self.environment.valid_actions
+            )
+            self.obs, reward, done, info = self.environment.step(action)
+            self.policy.observe(action, self.obs, reward, done, info)
         self.policy.improve()
 
     def advance(self):
@@ -351,15 +363,18 @@ def restore_saved_data(package_location):
     data_location = package_location / "data"
     # TODO - uglily communicates to save_data() the dynamic data location
     agentos.__dict__["save_data"].__dict__["data_location"] = data_location
-    saved_data = {}
+    agentos.__dict__["restore_data"].__dict__["data_location"] = data_location
+
+    # TODO
+    #saved_data = {}
     # TODO - handle aliasing
-    files = data_location.glob("*")
-    for f in files:
-        print(f"Restoring data at {f}")
-        with open(f, "rb") as f_in:
-            data = pickle.load(f_in)
-        saved_data[f.name] = data
-    agentos.__dict__["saved_data"] = saved_data
+    #files = data_location.glob("*")
+    #for f in files:
+    #    print(f"Restoring data at {f}")
+    #    with open(f, "rb") as f_in:
+    #        data = pickle.load(f_in)
+    #    saved_data[f.name] = data
+    #agentos.__dict__["saved_data"] = saved_data
 
 
 def load_agent_from_path(agent_file, package_location):

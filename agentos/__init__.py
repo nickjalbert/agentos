@@ -9,6 +9,7 @@ from agentos.core import (
     rollout,
     rollouts,
     save_data,
+    restore_data,
     saved_data,
 )
 
@@ -20,5 +21,6 @@ __all__ = [
     "rollout",
     "rollouts",
     "save_data",
+    "restore_data",
     "saved_data",
 ]

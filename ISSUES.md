@@ -52,3 +52,4 @@ See TODOs in r2d2 policy.py for more nitty gritty
 * look at R2D2 in RLlib
 
 
+* port all example policies to use the spec instead of getting passed separate actions
