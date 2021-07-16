@@ -61,6 +61,7 @@ class Policy(MemberInitializer):
     Policies are used by agents to encapsulate any state or logic necessary
     to decide on a next action given the last observation from an env.
     """
+
     def __init__(self, **kwargs):
         pass
 
@@ -108,12 +109,14 @@ class Environment(MemberInitializer):
     def seed(self, seed):
         raise NotImplementedError
 
+
 # TODO - custom saver/restorer functions
 # TODO - V hacky way to pass in the global data location; we decorate
 #        this function with the location in restore_saved_data in cli.py
 def save_data(name, data):
-    with open(save_data.data_location / name, 'wb') as f:
+    with open(save_data.data_location / name, "wb") as f:
         pickle.dump(data, f)
+
 
 def run_agent(agent, hz=40, max_iters=None, as_thread=False):
     """Run an agent, optionally in a new thread.
@@ -260,5 +263,6 @@ def rollouts(
         rollout(policy, env_class, step_fn, max_steps)
         for _ in range(num_rollouts)
     ]
+
 
 saved_data = {}

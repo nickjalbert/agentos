@@ -22,9 +22,10 @@ See TODOs in r2d2 policy.py for more nitty gritty
   like this for all environments is not ideal.
 
 * I should port other environments to generate specs, should the default
-  example one in AOS depend on acme?
+  example one in AOS depend on dm_env?
 
-* Pull out the initial {agent, policy, env} into their own files
+* Pull out the template {agent, policy, env} files used by agentos init into
+  their own files
 
 * Policy.decide(obs, actions) needs the actions because it doesn't have a
   pointer to the environment and thus doesn't know the action_space

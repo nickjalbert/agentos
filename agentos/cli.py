@@ -211,7 +211,7 @@ def confirm_package_installation(registry_entry, location):
 
 def create_directory_structure(location):
     os.makedirs(location, exist_ok=True)
-    os.makedirs(location / 'data', exist_ok=True)
+    os.makedirs(location / "data", exist_ok=True)
 
 
 def get_release_entry(registry_entry):
@@ -348,18 +348,18 @@ def get_class_from_config(agent_dir_path, config):
 # TODO - V hacky!  is this the a reasonable way to go?
 def restore_saved_data(package_location):
     package_location = Path(package_location).absolute()
-    data_location = package_location / 'data'
+    data_location = package_location / "data"
     # TODO - uglily communicates to save_data() the dynamic data location
-    agentos.__dict__['save_data'].__dict__['data_location'] = data_location
+    agentos.__dict__["save_data"].__dict__["data_location"] = data_location
     saved_data = {}
     # TODO - handle aliasing
-    files = data_location.glob('*')
+    files = data_location.glob("*")
     for f in files:
-        print(f'Restoring data at {f}')
-        with open(f, 'rb') as f_in:
+        print(f"Restoring data at {f}")
+        with open(f, "rb") as f_in:
             data = pickle.load(f_in)
         saved_data[f.name] = data
-    agentos.__dict__['saved_data'] = saved_data
+    agentos.__dict__["saved_data"] = saved_data
 
 
 def load_agent_from_path(agent_file, package_location):
@@ -375,10 +375,7 @@ def load_agent_from_path(agent_file, package_location):
     environment = env_cls(**config["Environment"])
     environment_spec = environment.get_spec()
     policy_cls = get_class_from_config(agent_dir_path, config["Policy"])
-    policy = policy_cls(
-            environment_spec=environment_spec,
-            **config["Policy"]
-    )
+    policy = policy_cls(environment_spec=environment_spec, **config["Policy"])
 
     agent_kwargs = {
         "environment": environment,
